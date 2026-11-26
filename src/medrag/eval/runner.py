@@ -16,8 +16,10 @@ RUNS_DIR = Path("eval/runs")
 # (suite, metric, column header) shown by `medrag eval compare`.
 KEY_METRICS: list[tuple[str, str, str]] = [
     ("retrieval", "hit@5", "ret hit@5"),
+    ("retrieval", "hit@10", "ret hit@10"),
     ("retrieval", "mrr@10", "ret MRR"),
     ("retrieval", "ndcg@10", "ret nDCG"),
+    ("retrieval", "context_tokens@5", "ctx tok@5"),
     ("generation", "faithfulness", "faithful"),
     ("generation", "citation_precision", "cite prec"),
     ("generation", "answer_recall", "ans recall"),
@@ -79,6 +81,9 @@ def render_report(config: dict[str, Any], summary: dict[str, Any]) -> str:
         f"- LLM: `{s['llm_model']}` (num_ctx {s['llm_num_ctx']}, temperature {s['llm_temperature']})",
         f"- Embeddings: `{s['embed_model']}`; chunks {s['chunk_size']}/{s['chunk_overlap']} tokens; "
         f"top_k {s['top_k']}",
+        f"- Index: `{s['collection']}`; strategy {s.get('chunk_strategy', 'fixed')}, "
+        f"clean {s.get('clean_text', False)}, headers {s.get('contextual_headers', False)}, "
+        f"parent {s.get('parent_chunk_size', 0) or 'off'}",
         f"- Git: {config['git']['commit']}{' (uncommitted changes)' if config['git']['dirty'] else ''}",
         f"- Options: `{json.dumps(config['options'])}`",
         "",
@@ -86,6 +91,8 @@ def render_report(config: dict[str, Any], summary: dict[str, Any]) -> str:
     for suite, metrics in summary.items():
         lines += [f"## {suite}", "", "| metric | value |", "|---|---|"]
         for k, v in metrics.items():
+            if k.endswith("_ids"):  # id lists stay in summary.json
+                continue
             if isinstance(v, dict):
                 v = ", ".join(f"{kk} {_fmt(vv)}" for kk, vv in v.items())
             lines.append(f"| {k} | {_fmt(v)} |")
@@ -103,12 +110,12 @@ def render_report(config: dict[str, Any], summary: dict[str, Any]) -> str:
 def compare(root: Path = RUNS_DIR, last: int = 10) -> list[list[str]]:
     """Table rows (header first) of key metrics for the most recent runs."""
     runs = sorted(p for p in root.glob("*/summary.json"))[-last:]
-    header = ["run", "model", *[h for _, _, h in KEY_METRICS]]
+    header = ["run", "model", "collection", *[h for _, _, h in KEY_METRICS]]
     rows = [header]
     for p in runs:
         summary = json.loads(p.read_text())
         cfg = json.loads((p.parent / "config.json").read_text())
-        row = [p.parent.name[:15], cfg["settings"]["llm_model"]]
+        row = [p.parent.name[:15], cfg["settings"]["llm_model"], cfg["settings"]["collection"]]
         row += [_fmt(summary.get(suite, {}).get(metric)) for suite, metric, _ in KEY_METRICS]
         rows.append(row)
     return rows

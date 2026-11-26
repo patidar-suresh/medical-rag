@@ -7,9 +7,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from medrag.eval.common import (
+    compact,
     latency_summary,
     mean,
-    normalize,
     percentile,
     token_recall,
     wilson_interval,
@@ -44,31 +44,38 @@ def run_retrieval(
     log: Log,
     ks: Sequence[int] = (1, 3, 5, 10),
 ) -> SuiteResult:
-    """Gold = evidence quote. A retrieved chunk is relevant if it contains the quote."""
+    """Gold = evidence quote. A returned passage is relevant if it contains the quote.
+
+    "Returned passage" = what the LLM would see: the parent section in parent-child mode.
+    Larger passages make hits easier, so `context_tokens@5` is reported alongside.
+    """
     kmax = max(ks)
-    norm_chunks = [normalize(c.text) for c in chunks]
+    returned = {c.as_parent().chunk_id: c.as_parent().text for c in chunks}  # dedupes parents
+    corpus = [compact(t) for t in returned.values()]
     ranks: list[int | None] = []
     ndcgs: list[float] = []
     book_hits: list[bool] = []
+    context_tokens: list[float] = []
     latencies: list[float] = []
     by_subject: dict[str, list[int | None]] = defaultdict(list)
     records: list[dict[str, Any]] = []
-    skipped = 0
+    skipped: list[str] = []
 
     for n, it in enumerate(items, 1):
-        ev = normalize(it["evidence"])
-        n_relevant = sum(ev in t for t in norm_chunks)
-        if n_relevant == 0:  # quote no longer inside a single chunk (e.g. after re-chunking)
-            skipped += 1
+        ev = compact(it["evidence"])
+        n_relevant = sum(ev in t for t in corpus)
+        if n_relevant == 0:  # quote no longer inside one passage (e.g. split by new chunking)
+            skipped.append(it["id"])
             continue
         t0 = time.perf_counter()
         hits = rag.retrieve(it["question"], kmax)
         latencies.append(time.perf_counter() - t0)
-        rel = [ev in normalize(h.chunk.text) for h in hits]
+        rel = [ev in compact(h.chunk.text) for h in hits]
         rank = first_relevant_rank(rel)
         ranks.append(rank)
         ndcgs.append(ndcg_at_k(rel, n_relevant, 10))
         book_hits.append(any(h.chunk.book == it["book"] for h in hits[:5]))
+        context_tokens.append(float(sum(h.chunk.n_tokens for h in hits[:5])))
         by_subject[it["subject"]].append(rank)
         records.append(
             {
@@ -84,11 +91,13 @@ def run_retrieval(
         if n % 50 == 0:
             log(f"  retrieval {n}/{len(items)}  hit@5 so far {hit_rate(ranks, 5):.3f}")
 
-    summary: dict[str, Any] = {"n": len(ranks), "skipped_no_gold": skipped}
+    summary: dict[str, Any] = {"n": len(ranks), "skipped_no_gold": len(skipped)}
     summary.update({f"hit@{k}": _r(hit_rate(ranks, k)) for k in ks})
     summary["mrr@10"] = _r(mrr(ranks, 10))
     summary["ndcg@10"] = _r(mean(ndcgs))
     summary["book_hit@5"] = _r(mean([float(b) for b in book_hits]))
+    summary["context_tokens@5"] = _r(mean(context_tokens), 1)
+    summary["skipped_ids"] = skipped
     summary.update({k: _r(v) for k, v in latency_summary("retrieval", latencies).items()})
     summary["hit@5_by_subject"] = {s: _r(hit_rate(r, 5), 3) for s, r in sorted(by_subject.items())}
     return SuiteResult(summary, records)

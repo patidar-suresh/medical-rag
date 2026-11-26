@@ -26,7 +26,8 @@ ANSWER_INSTRUCTION = (
 
 def format_passages(hits: Sequence[Hit]) -> str:
     return "\n\n".join(
-        f"[{i}] (Source: {h.chunk.book})\n{h.chunk.text.strip()}" for i, h in enumerate(hits, 1)
+        f"[{i}] (Source: {h.chunk.context or h.chunk.book})\n{h.chunk.text.strip()}"
+        for i, h in enumerate(hits, 1)
     )
 
 

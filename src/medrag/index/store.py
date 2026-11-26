@@ -13,9 +13,34 @@ class Chunk:
     book: str
     subject: str
     text: str
-    start: int  # char offsets into the book file
+    start: int  # char offsets into the book text (cleaned text when cleaning is on)
     end: int
     n_tokens: int
+    context: str = ""  # breadcrumb "Book › Chapter › Section" (structured chunking)
+    content_hash: str = ""  # sha1 of text, for change detection on re-ingest
+    # Parent-child ("small-to-big"): this chunk is embedded, its parent is what gets returned.
+    parent_id: str | None = None
+    parent_text: str | None = None
+    parent_n_tokens: int | None = None
+
+    def embed_text(self, contextual: bool) -> str:
+        """What gets embedded: the text, optionally prefixed by its breadcrumb."""
+        return f"{self.context}\n\n{self.text}" if contextual and self.context else self.text
+
+    def as_parent(self) -> "Chunk":
+        """The chunk to show the LLM: the parent section when there is one."""
+        if self.parent_id is None or self.parent_text is None:
+            return self
+        return Chunk(
+            chunk_id=self.parent_id,
+            book=self.book,
+            subject=self.subject,
+            text=self.parent_text,
+            start=self.start,
+            end=self.end,
+            n_tokens=self.parent_n_tokens or self.n_tokens,
+            context=self.context,
+        )
 
 
 @dataclass(frozen=True)

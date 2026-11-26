@@ -24,11 +24,37 @@ SUBJECTS: dict[str, str] = {
 }
 
 
+# Human-readable titles used in contextual chunk headers and citations.
+TITLES: dict[str, str] = {
+    "Anatomy_Gray": "Gray's Anatomy",
+    "Biochemistry_Lippincott": "Lippincott Biochemistry",
+    "Cell_Biology_Alberts": "Alberts Molecular Biology of the Cell",
+    "First_Aid_Step1": "First Aid for the USMLE Step 1",
+    "First_Aid_Step2": "First Aid for the USMLE Step 2 CK",
+    "Histology_Ross": "Ross Histology",
+    "Immunology_Janeway": "Janeway's Immunobiology",
+    "InternalMed_Harrison": "Harrison's Principles of Internal Medicine",
+    "Neurology_Adams": "Adams and Victor's Principles of Neurology",
+    "Obstentrics_Williams": "Williams Obstetrics",
+    "Pathology_Robbins": "Robbins Basic Pathology",
+    "Pathoma_Husain": "Pathoma",
+    "Pediatrics_Nelson": "Nelson Textbook of Pediatrics",
+    "Pharmacology_Katzung": "Katzung Basic and Clinical Pharmacology",
+    "Physiology_Levy": "Berne and Levy Physiology",
+    "Psichiatry_DSM-5": "DSM-5",
+    "Surgery_Schwartz": "Schwartz's Principles of Surgery",
+}
+
+
 @dataclass(frozen=True)
 class Book:
     name: str  # file stem, e.g. "Pharmacology_Katzung"
     subject: str
     text: str
+
+    @property
+    def title(self) -> str:
+        return TITLES.get(self.name, self.name.replace("_", " "))
 
 
 def subject_for(book_name: str) -> str:

@@ -29,8 +29,16 @@ def corpus(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def settings(tmp_path: Path, corpus: Path) -> Settings:
+    # The Phase 1 fixed-window path on raw text (structured chunking is covered in test_clean_structured).
     return Settings(
-        _env_file=None, corpus_dir=corpus, data_dir=tmp_path / "data", chunk_size=12, chunk_overlap=2
+        _env_file=None,
+        corpus_dir=corpus,
+        data_dir=tmp_path / "data",
+        chunk_strategy="fixed",
+        clean_text=False,
+        parent_chunk_size=0,
+        chunk_size=12,
+        chunk_overlap=2,
     )
 
 
@@ -58,7 +66,7 @@ def test_ingest_then_answer(settings: Settings, corpus: Path) -> None:
     assert stats.books == 2 and stats.chunks == store.count() > 2
 
     # chunks.jsonl mirrors the index and slices match the source text
-    lines = (settings.data_dir / "chunks.jsonl").read_text().splitlines()
+    lines = settings.chunks_path.read_text().splitlines()
     first = json.loads(lines[0])
     source = (corpus / f"{first['book']}.txt").read_text()
     assert source[first["start"] : first["end"]] == first["text"]
@@ -68,7 +76,10 @@ def test_ingest_then_answer(settings: Settings, corpus: Path) -> None:
     ans = rag.answer("What treats absence seizure?")
     assert {h.chunk.book for h in ans.hits} == {"Pharmacology_Katzung"}
     user_prompt = llm.prompts[0][1].content
-    assert user_prompt.startswith("Passages:") and "[1] (Source: Pharmacology_Katzung)" in user_prompt
+    assert (
+        user_prompt.startswith("Passages:")
+        and "[1] (Source: Katzung Basic and Clinical Pharmacology)" in user_prompt
+    )
 
     ok = grade(SmokeCase("t", "q", keywords=("ethosuximide",), books=("Pharmacology_Katzung",)), ans)
     assert ok.answer_ok and ok.retrieval_ok

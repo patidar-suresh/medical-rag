@@ -88,7 +88,9 @@ def build_pipeline(s: Settings, embedder: "Embedder | None" = None) -> "RAGPipel
     if not store.exists():
         typer.echo(f"Collection '{s.collection}' not found in Qdrant. Run `medrag ingest` first.", err=True)
         raise typer.Exit(code=1)
-    return RAGPipeline(embedder or SentenceTransformerEmbedder(s), store, OllamaClient(s), s.top_k)
+    return RAGPipeline(
+        embedder or SentenceTransformerEmbedder(s), store, OllamaClient(s), s.top_k, s.parent_chunk_size > 0
+    )
 
 
 @app.command()

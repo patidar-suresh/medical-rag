@@ -164,6 +164,9 @@ The highest return on effort in most RAG systems.
 - **Metadata:** book, subject (anatomy, pharmacology, …), section path, char offsets,
   content hash (for idempotent re-ingestion), and a tag for audience (Step 1 vs. clinical).
 - **Exit:** a measurable Recall@10 improvement over Phase 1.
+- **Outcome (done):** parent-child 160→800 tokens on cleaned, structured text: hit@5 0.59 → 0.74,
+  hit@10 0.70 → 0.80 (p < 0.0001). Cleaning alone and contextual headers showed no measurable
+  effect. Details: [experiments/phase3-chunking.md](experiments/phase3-chunking.md).
 
 ### Phase 4: Hybrid retrieval and reranking (3 days)
 - Dense + sparse (BM25/SPLADE) in Qdrant, fused with **Reciprocal Rank Fusion**.
@@ -192,6 +195,9 @@ Add each technique only if the eval improves:
   return structured JSON (Ollama `format=` with a JSON schema) as a list of
   `{sentence, citations: [ids]}`. Then **verify each citation locally** with an NLI or
   similarity check against the cited passage, and drop or flag unsupported sentences.
+- **Citation format collision (found in Phase 3):** a third of the textbook passages contain
+  figure references like "(Fig. 8-2)", which the model copies as "[8-2]". Use citation markers
+  the books can't produce (e.g. `[P1]`) or strip figure references during cleaning.
 - **Context engineering:** small local models have small effective context, so keep it
   tight: 4–6 passages, dedupe near-duplicates, trim to a token budget, put the most relevant
   passage first and last, keep the book/section header on each. Set `num_ctx` explicitly

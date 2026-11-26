@@ -60,7 +60,7 @@ def build_synth(
     s = get_settings()
     if model:
         s = s.model_copy(update={"llm_model": model})
-    chunks = load_chunks(s.data_dir / "chunks.jsonl")
+    chunks = load_chunks(s.chunks_path)
     t0 = time.perf_counter()
 
     def progress(tried: int, kept: int, reason: str | None) -> None:
@@ -115,7 +115,7 @@ def run(
         raise typer.BadParameter(f"Not pulled in Ollama: {missing}. Run: ollama pull <model>")
 
     embedder = SentenceTransformerEmbedder(base)
-    chunks = load_chunks(base.data_dir / "chunks.jsonl") if Suite.retrieval in suites else []
+    chunks = load_chunks(base.chunks_path) if Suite.retrieval in suites else []
     nli: list[NLIScorer] = []  # loaded once, lazily
 
     def nli_factory() -> NLIScorer:
@@ -184,10 +184,24 @@ def _latest_generation_run() -> Path:
     return runs[-1]
 
 
-def _chunk_texts() -> dict[str, str]:
+def _run_collection(run_path: Path) -> str:
+    import json
+
+    cfg = json.loads((run_path / "config.json").read_text())
+    return str(cfg["settings"]["collection"])
+
+
+def _chunk_texts(collection: str) -> dict[str, str]:
+    """chunk id -> text for a collection, including parent ids (parent-child collections)."""
     from medrag.eval.common import load_chunks
 
-    return {c.chunk_id: c.text for c in load_chunks(get_settings().data_dir / "chunks.jsonl")}
+    path = get_settings().model_copy(update={"collection": collection}).chunks_path
+    texts: dict[str, str] = {}
+    for c in load_chunks(path):
+        texts[c.chunk_id] = c.text
+        if c.parent_id and c.parent_text:
+            texts[c.parent_id] = c.parent_text
+    return texts
 
 
 @eval_app.command("label")
@@ -210,8 +224,9 @@ def label(
         return
     typer.echo(f"Labelling {len(items)} sentences from {run_path}. {len(done)} labels already saved.")
     typer.echo("Judge only the passages shown, not your own medical knowledge.\n" + HELP)
-    chunks = _chunk_texts()
-    saved = label_loop(items, chunks.__getitem__, _labels_path(), input, typer.echo)
+    collection = _run_collection(run_path)
+    chunks = _chunk_texts(collection)
+    saved = label_loop(items, chunks.__getitem__, _labels_path(), input, typer.echo, collection)
     typer.echo(f"\nSaved {saved} labels ({len(done) + saved} total) -> {_labels_path()}")
     typer.echo("Next: medrag eval calibrate")
 
@@ -232,8 +247,8 @@ def calibrate(
     if len(labels) < 10:
         raise typer.BadParameter(f"Only {len(labels)} labels; label at least 10 (aim for 50) first.")
     truth = [lb.supported for lb in labels]
-    chunks = _chunk_texts()
-    passages = [[chunks[c] for c in lb.sources if c in chunks] for lb in labels]
+    by_collection = {c: _chunk_texts(c) for c in {lb.collection for lb in labels}}
+    passages = [[by_collection[lb.collection][c] for c in lb.sources] for lb in labels]
     pos = sum(truth)
     typer.echo(f"{len(labels)} labels: {pos} supported, {len(labels) - pos} not supported\n")
 

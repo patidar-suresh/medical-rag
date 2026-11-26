@@ -35,6 +35,7 @@ class Label:
     sources: list[str]
     nli_score_at_sampling: float
     supported: bool
+    collection: str = "medrag_chunks"  # where `sources` chunk ids resolve
 
 
 def candidates_from_run(run_dir: Path) -> list[Candidate]:
@@ -90,6 +91,7 @@ def label_loop(
     out_path: Path,
     ask: Callable[[str], str],
     echo: Callable[[str], None],
+    collection: str = "medrag_chunks",
 ) -> int:
     """Interactive loop. `passages(chunk_id)` returns chunk text. Returns how many labels were saved."""
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -116,7 +118,7 @@ def label_loop(
             break
         if a == "s":
             continue
-        label = Label(c.key, c.question, c.sentence, c.sources, c.nli_score, a == "y")
+        label = Label(c.key, c.question, c.sentence, c.sources, c.nli_score, a == "y", collection)
         with out_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(asdict(label), ensure_ascii=False) + "\n")
         saved += 1

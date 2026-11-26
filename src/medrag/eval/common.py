@@ -3,6 +3,7 @@
 import json
 import math
 import re
+import unicodedata
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any
@@ -38,6 +39,18 @@ def normalize(text: str) -> str:
 
 
 # fmt: off
+_NON_ALNUM_ALL = re.compile(r"[^a-z0-9]+")
+
+
+def compact(text: str) -> str:
+    """Letters and digits only, no spaces, after Unicode folding.
+
+    Used to match gold evidence quotes against chunks: robust to the cleaning step
+    (ligatures, rejoined hyphenation "statisti- cal", collapsed whitespace).
+    """
+    return _NON_ALNUM_ALL.sub("", unicodedata.normalize("NFKC", text).lower())
+
+
 STOPWORDS = frozenset((
     "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "have", "in", "is",
     "it", "its", "of", "on", "or", "that", "the", "this", "to", "was", "were", "which", "with",

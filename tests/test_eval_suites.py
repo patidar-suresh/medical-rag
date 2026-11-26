@@ -169,5 +169,5 @@ def test_run_dir_and_compare(tmp_path: Path) -> None:
         "report.md",
     }
     rows = compare(tmp_path)
-    assert rows[1][2] == "0.800"
+    assert rows[1][3] == "0.800"
     assert "| hit@5 | 0.800 |" in (run.dir / "report.md").read_text()

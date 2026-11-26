@@ -8,9 +8,18 @@ grounded citations, guardrails and a scalable API.
 
 > ⚠️ Educational project. Not a medical device and not medical advice.
 
+**Runs 100 % locally with open-source components. No cloud LLM API keys required.**
+
 ## Stack
-Python 3.11 · Qdrant (hybrid dense + sparse) · sentence-transformers / MedCPT ·
-cross-encoder reranking · Claude (Anthropic API) · FastAPI · Redis · OpenTelemetry
+Python 3.11 · **Ollama** (local open-weight LLMs) · Qdrant (hybrid dense + sparse) ·
+sentence-transformers / MedCPT embeddings · cross-encoder reranking · FastAPI · Valkey ·
+OpenTelemetry + Langfuse (self-hosted)
+
+## Prerequisites
+- [Ollama](https://ollama.com) running locally, with a model pulled, e.g.
+  `ollama pull llama3.2:3b` (see the model sizing table in the roadmap)
+- Docker (for Qdrant)
+- Python 3.11+ and [uv](https://docs.astral.sh/uv/)
 
 ## Data
 The source corpus is a set of English medical textbooks (the MedQA textbook corpus) placed
@@ -21,8 +30,9 @@ repository** (`textbooks/` is gitignored). Obtain them separately and copy them 
 ```bash
 uv venv && source .venv/bin/activate
 uv pip install -e ".[dev]"
-cp .env.example .env              # add ANTHROPIC_API_KEY
+cp .env.example .env              # set the Ollama URL and model (no API keys)
 docker compose up -d qdrant       # Phase 0
+medrag doctor                     # checks Qdrant, Ollama, model, GPU
 medrag ingest                     # Phase 1
 medrag ask "First-line treatment for absence seizures?"
 medrag eval --suite smoke         # Phase 2

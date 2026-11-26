@@ -1,11 +1,11 @@
 [project]
 name = "medrag"
 version = "0.1.0"
-description = "Production-grade medical RAG over textbook corpus"
+description = "Production-grade medical RAG over a textbook corpus, fully local (Ollama + Qdrant)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "anthropic",
+    "ollama",
     "pydantic-settings",
     "qdrant-client",
     "sentence-transformers",

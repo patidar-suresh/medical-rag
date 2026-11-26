@@ -27,5 +27,10 @@ def test_invalid_temperature_rejected() -> None:
         Settings(_env_file=None, llm_temperature=5.0)
 
 
+def test_overlap_must_be_smaller_than_chunk_size() -> None:
+    with pytest.raises(ValueError, match="chunk_overlap"):
+        Settings(_env_file=None, chunk_size=100, chunk_overlap=100)
+
+
 def test_corpus_dir_is_path() -> None:
     assert isinstance(Settings(_env_file=None).corpus_dir, Path)

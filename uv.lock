@@ -799,6 +799,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "qdrant-client" },
+    { name = "sentence-transformers" },
     { name = "structlog" },
     { name = "typer" },
 ]
@@ -809,9 +810,6 @@ dev = [
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "ruff" },
-]
-ml = [
-    { name = "sentence-transformers" },
 ]
 
 [package.metadata]
@@ -824,11 +822,11 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "qdrant-client", specifier = ">=1.12" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6" },
-    { name = "sentence-transformers", marker = "extra == 'ml'", specifier = ">=3.0" },
+    { name = "sentence-transformers", specifier = ">=6.0" },
     { name = "structlog", specifier = ">=24.1" },
     { name = "typer", specifier = ">=0.12" },
 ]
-provides-extras = ["ml", "dev"]
+provides-extras = ["dev"]
 
 [[package]]
 name = "mpmath"

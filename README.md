@@ -26,17 +26,19 @@ The source corpus is a set of English medical textbooks (the MedQA textbook corp
 locally under `textbooks/en/`. **The textbooks are copyrighted and are not included in this
 repository** (`textbooks/` is gitignored). Obtain them separately and copy them in.
 
-## Quick start (as phases land)
+## Quick start
 ```bash
-uv venv && source .venv/bin/activate
-uv pip install -e ".[dev]"
+make install                      # .venv with Python 3.11 + all dependencies (uv)
 cp .env.example .env              # set the Ollama URL and model (no API keys)
-docker compose up -d qdrant       # Phase 0
-medrag doctor                     # checks Qdrant, Ollama, model, GPU
-medrag ingest                     # Phase 1
-medrag ask "First-line treatment for absence seizures?"
-medrag eval --suite smoke         # Phase 2
+make up                           # start Qdrant
+uv run medrag doctor              # checks Qdrant, Ollama, model, GPU, corpus
+
+uv run medrag ingest              # chunk + embed + index all books (or: --book Anatomy_Gray)
+uv run medrag ask "What is the first-line drug for absence seizures?" --show-context
+uv run medrag smoke               # 22 smoke questions: answer + retrieval pass rates
 ```
+
+Smoke results are written to `eval/runs/`. A full evaluation harness arrives in Phase 2.
 
 ## Status
 - [ ] Phase 0: Foundations

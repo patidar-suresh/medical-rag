@@ -8,6 +8,11 @@ services:
       - "127.0.0.1:6333:6333"   # REST + dashboard at http://localhost:6333/dashboard
       - "127.0.0.1:6334:6334"   # gRPC
     volumes:
-      - ./data/qdrant_storage:/qdrant/storage
+      # Docker-managed volume: a bind mount under ./data would be created root-owned
+      # and block the app from writing its own files there.
+      - qdrant_storage:/qdrant/storage
     environment:
       QDRANT__TELEMETRY_DISABLED: "true"
+
+volumes:
+  qdrant_storage:

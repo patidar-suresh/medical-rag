@@ -11,11 +11,11 @@ dependencies = [
     "qdrant-client>=1.12",
     "typer>=0.12",
     "structlog>=24.1",
+    # Local embedding models (pulls PyTorch with CUDA, ~2–3 GB)
+    "sentence-transformers>=6.0",
 ]
 
 [project.optional-dependencies]
-# Local embedding/reranking models. Added in Phase 1 (pulls PyTorch, ~2–3 GB).
-ml = ["sentence-transformers>=3.0"]
 dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11", "pre-commit>=3.7"]
 
 [project.scripts]
@@ -39,6 +39,10 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "BLE"]
 python_version = "3.11"
 strict = true
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["sentence_transformers.*", "transformers.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

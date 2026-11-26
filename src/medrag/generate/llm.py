@@ -92,5 +92,9 @@ class OllamaClient:
             if chunk.message.content:
                 yield chunk.message.content
 
+    def unload(self) -> None:
+        """Free the model's GPU memory now (e.g. before bulk embedding on a small GPU)."""
+        self._client.generate(model=self.model, prompt="", keep_alive=0)
+
     def installed_models(self) -> list[str]:
         return [m.model for m in self._client.list().models if m.model]

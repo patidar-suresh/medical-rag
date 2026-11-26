@@ -52,6 +52,12 @@ class Settings(BaseSettings):
     # Retrieval
     top_k: int = Field(default=5, ge=1, le=50)
 
+    # Evaluation: open NLI model used to check answer sentences against passages
+    nli_model: str = "cross-encoder/nli-deberta-v3-base"
+    # Entailment probability above which a sentence counts as supported.
+    # Calibrate against human labels with `medrag eval label` + `medrag eval calibrate`.
+    nli_threshold: float = Field(default=0.5, gt=0.0, lt=1.0)
+
     # Data
     corpus_dir: Path = Path("textbooks/en")
     data_dir: Path = Path("data")

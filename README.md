@@ -35,10 +35,32 @@ uv run medrag doctor              # checks Qdrant, Ollama, model, GPU, corpus
 
 uv run medrag ingest              # chunk + embed + index all books (or: --book Anatomy_Gray)
 uv run medrag ask "What is the first-line drug for absence seizures?" --show-context
-uv run medrag smoke               # 22 smoke questions: answer + retrieval pass rates
 ```
 
-Smoke results are written to `eval/runs/`. A full evaluation harness arrives in Phase 2.
+## Evaluation
+```bash
+uv run medrag eval fetch-medqa              # MedQA USMLE test set (CC-BY-4.0) -> data/medqa/
+uv run medrag eval build-synth --n 300      # synthetic retrieval set -> data/eval/ (one-off, ~30 min)
+
+uv run medrag eval run                      # all suites -> eval/runs/<timestamp>-<model>/report.md
+uv run medrag eval run -s smoke             # quick check (26 hand-written questions)
+uv run medrag eval run -s medqa -m llama3.2:3b -m qwen3:4b   # compare local models
+uv run medrag eval compare                  # key metrics of recent runs side by side
+
+# Calibrate the automatic faithfulness check against your own judgement
+uv run medrag eval label --n 50             # y/n per answer sentence (resumable)
+uv run medrag eval calibrate --nli-model cross-encoder/nli-deberta-v3-base \
+                             --nli-model cross-encoder/nli-deberta-v3-large
+```
+
+| Suite | What it measures |
+|---|---|
+| `retrieval` | hit@1/3/5/10, MRR@10, nDCG@10, right-book@5 on synthetic questions. Gold = exact evidence quote, so it stays valid when chunking changes |
+| `generation` | faithfulness and citation precision (local NLI model), answer recall, false-refusal rate, TTFT, tokens/s |
+| `smoke` | keyword pass rate, refusal on out-of-scope questions |
+| `medqa` | USMLE accuracy closed-book vs. with retrieval, with 95% confidence intervals |
+
+Generated datasets live in `data/` (gitignored): the synthetic set quotes the copyrighted textbooks.
 
 ## Status
 - [ ] Phase 0: Foundations

@@ -8,7 +8,7 @@ import structlog
 def configure_logging(level: str = "INFO", json: bool = False) -> None:
     logging.basicConfig(format="%(message)s", level=level.upper())
     # Third-party INFO chatter (per-request HTTP logs, model-loading notices) stays out of normal output.
-    for noisy in ("httpx", "httpcore", "sentence_transformers", "huggingface_hub"):
+    for noisy in ("httpx", "httpcore", "httpx2", "httpcore2", "sentence_transformers", "huggingface_hub"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
     renderer: structlog.types.Processor = (
         structlog.processors.JSONRenderer() if json else structlog.dev.ConsoleRenderer()

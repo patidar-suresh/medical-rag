@@ -1,21 +1,21 @@
 """`medrag` command-line interface."""
 
-import json
 import time
-from datetime import datetime
-from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
 import typer
 
+from medrag.cli_eval import eval_app
 from medrag.config import Settings, get_settings
 from medrag.doctor import run_checks
 from medrag.logs import configure_logging
 
 if TYPE_CHECKING:
+    from medrag.index.embedder import Embedder
     from medrag.rag import RAGPipeline
 
 app = typer.Typer(help="MedRAG: local medical RAG over textbooks.", no_args_is_help=True)
+app.add_typer(eval_app, name="eval")
 
 
 @app.callback()
@@ -76,7 +76,8 @@ def ingest(
     )
 
 
-def _pipeline(s: Settings) -> "RAGPipeline":
+def build_pipeline(s: Settings, embedder: "Embedder | None" = None) -> "RAGPipeline":
+    """Pipeline from settings. Pass `embedder` to reuse an already-loaded model."""
     # Heavy imports (torch) stay inside commands so `medrag doctor` starts instantly.
     from medrag.generate.llm import OllamaClient
     from medrag.index.embedder import SentenceTransformerEmbedder
@@ -87,7 +88,7 @@ def _pipeline(s: Settings) -> "RAGPipeline":
     if not store.exists():
         typer.echo(f"Collection '{s.collection}' not found in Qdrant. Run `medrag ingest` first.", err=True)
         raise typer.Exit(code=1)
-    return RAGPipeline(SentenceTransformerEmbedder(s), store, OllamaClient(s), s.top_k)
+    return RAGPipeline(embedder or SentenceTransformerEmbedder(s), store, OllamaClient(s), s.top_k)
 
 
 @app.command()
@@ -97,7 +98,7 @@ def ask(
     show_context: Annotated[bool, typer.Option(help="Print the retrieved passages.")] = False,
 ) -> None:
     """Answer a question from the indexed textbooks (streams the answer)."""
-    rag = _pipeline(get_settings())
+    rag = build_pipeline(get_settings())
     t0 = time.perf_counter()
     hits, tokens = rag.stream_answer(question, k)
     for i, h in enumerate(hits, 1):
@@ -109,52 +110,6 @@ def ask(
     for i, h in enumerate(hits, 1):
         typer.echo(f"  [{i}] {h.chunk.chunk_id}  (score {h.score:.3f})")
     typer.echo(f"({time.perf_counter() - t0:.1f}s)")
-
-
-@app.command()
-def smoke(
-    path: Annotated[Path, typer.Option(help="Smoke-test cases (JSONL).")] = Path("eval/smoke.jsonl"),
-) -> None:
-    """Run the smoke questions and report answer and retrieval pass rates."""
-    from medrag.smoke import grade, load_cases
-
-    s = get_settings()
-    rag = _pipeline(s)
-    cases = load_cases(path)
-    results = []
-    for c in cases:
-        r = grade(c, rag.answer(c.question))
-        results.append(r)
-        ret = "-" if r.retrieval_ok is None else ("hit " if r.retrieval_ok else "miss")
-        typer.echo(
-            f"{'PASS' if r.answer_ok else 'FAIL'}  retrieval:{ret:<4}  "
-            f"{r.answer.seconds_generation:5.1f}s  {c.id}: {r.answer.text[:90]!r}"
-        )
-
-    answerable = [r for r in results if r.retrieval_ok is not None]
-    typer.echo(
-        f"\nAnswers correct: {sum(r.answer_ok for r in results)}/{len(results)}   "
-        f"Retrieval hit (answerable): {sum(bool(r.retrieval_ok) for r in answerable)}/{len(answerable)}   "
-        f"model={s.llm_model} embed={s.embed_model} k={s.top_k} chunk={s.chunk_size}/{s.chunk_overlap}"
-    )
-
-    out = Path("eval/runs") / f"{datetime.now():%Y%m%d-%H%M%S}-smoke.jsonl"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("w", encoding="utf-8") as f:
-        for r in results:
-            rec = {
-                "id": r.case.id,
-                "question": r.case.question,
-                "answer": r.answer.text,
-                "answer_ok": r.answer_ok,
-                "retrieval_ok": r.retrieval_ok,
-                "sources": [h.chunk.chunk_id for h in r.answer.hits],
-                "scores": [round(h.score, 4) for h in r.answer.hits],
-                "seconds_generation": round(r.answer.seconds_generation, 2),
-                "model": s.llm_model,
-            }
-            f.write(json.dumps(rec) + "\n")
-    typer.echo(f"Details: {out}")
 
 
 if __name__ == "__main__":

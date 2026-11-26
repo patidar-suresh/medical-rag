@@ -1,7 +1,8 @@
-"""Minimal smoke-test runner over `eval/smoke.jsonl`.
+"""Smoke suite over hand-written cases in `eval/smoke.jsonl`.
 
-A deliberately simple check (keyword match + source-book hit) to validate the
-Phase 1 baseline end to end. Phase 2 replaces it with a proper eval harness.
+Simple, transparent checks (keyword match, source-book hit, abstention on
+unanswerable questions). Keyword matching is lenient by design; the generation
+suite's NLI faithfulness and citation metrics are the stricter signal.
 """
 
 import json

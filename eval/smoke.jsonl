@@ -20,3 +20,7 @@
 {"id": "surg-charcot-triad", "question": "What are the components of Charcot's triad in acute cholangitis?", "keywords_all": ["fever", "jaundice"], "books": ["Surgery_Schwartz", "InternalMed_Harrison", "First_Aid_Step2"]}
 {"id": "oos-capital", "question": "What is the capital city of Australia?", "answerable": false}
 {"id": "oos-stock-price", "question": "What was the closing price of Apple stock yesterday?", "answerable": false}
+{"id": "oos-fictional-drug-dose", "question": "What is the recommended adult dose of zelvotrexine for migraine prophylaxis?", "answerable": false}
+{"id": "oos-fictional-drug-halflife", "question": "What is the elimination half-life of lorvastimab?", "answerable": false}
+{"id": "oos-current-official", "question": "Who is the current Surgeon General of the United States?", "answerable": false}
+{"id": "oos-recent-event", "question": "Which country won the 2026 FIFA World Cup?", "answerable": false}

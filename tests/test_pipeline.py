@@ -8,12 +8,12 @@ from fakes import EchoLLM, KeywordEmbedder, whitespace_offsets
 from qdrant_client import QdrantClient
 
 from medrag.config import Settings
+from medrag.eval.smoke import SmokeCase, abstained, grade
 from medrag.generate.prompts import NOT_FOUND
 from medrag.index.store import QdrantStore
 from medrag.ingest.loader import load_books, subject_for
 from medrag.ingest.pipeline import ingest
 from medrag.rag import RAGPipeline
-from medrag.smoke import SmokeCase, abstained, grade
 
 
 @pytest.fixture

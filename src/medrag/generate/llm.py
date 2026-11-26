@@ -29,6 +29,9 @@ class Completion:
     done_reason: str | None
     prompt_tokens: int | None
     completion_tokens: int | None
+    # Server-side timings: time to first token (model load + prompt processing) and decode speed.
+    ttft_s: float | None = None
+    tokens_per_s: float | None = None
 
     @property
     def truncated(self) -> bool:
@@ -73,12 +76,21 @@ class OllamaClient:
             keep_alive=self._settings.llm_keep_alive,
             stream=False,
         )
+        ns = 1e9
+        ttft = None
+        if resp.prompt_eval_duration is not None:
+            ttft = ((resp.load_duration or 0) + resp.prompt_eval_duration) / ns
+        tps = None
+        if resp.eval_count and resp.eval_duration:
+            tps = resp.eval_count / (resp.eval_duration / ns)
         return Completion(
             text=resp.message.content or "",
             model=resp.model or self.model,
             done_reason=resp.done_reason,
             prompt_tokens=resp.prompt_eval_count,
             completion_tokens=resp.eval_count,
+            ttft_s=ttft,
+            tokens_per_s=tps,
         )
 
     def stream(self, messages: list[Message]) -> Iterator[str]:

@@ -5,16 +5,18 @@ description = "Production-grade medical RAG over a textbook corpus, fully local 
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "ollama",
-    "pydantic-settings",
-    "qdrant-client",
-    "sentence-transformers",
-    "typer",
-    "structlog",
+    "ollama>=0.4",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "qdrant-client>=1.12",
+    "typer>=0.12",
+    "structlog>=24.1",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "mypy", "pre-commit"]
+# Local embedding/reranking models. Added in Phase 1 (pulls PyTorch, ~2–3 GB).
+ml = ["sentence-transformers>=3.0"]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11", "pre-commit>=3.7"]
 
 [project.scripts]
 medrag = "medrag.cli:app"
@@ -27,5 +29,18 @@ build-backend = "hatchling.build"
 packages = ["src/medrag"]
 
 [tool.ruff]
-line-length = 100
+line-length = 110
 target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "BLE"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+addopts = "-q"

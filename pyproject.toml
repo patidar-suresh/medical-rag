@@ -13,6 +13,7 @@ dependencies = [
     "structlog>=24.1",
     # Local embedding models (pulls PyTorch with CUDA, ~2–3 GB)
     "sentence-transformers>=6.0",
+    "pystemmer>=2.2",
 ]
 
 [project.optional-dependencies]
@@ -41,7 +42,7 @@ strict = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["sentence_transformers.*", "transformers.*"]
+module = ["sentence_transformers.*", "transformers.*", "Stemmer"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

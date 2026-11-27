@@ -64,7 +64,7 @@ def ingest(
     stats = run_ingest(
         loaded,
         settings=s,
-        offsets_fn=hf_offsets_fn(s.embed_model),
+        offsets_fn=hf_offsets_fn(s.chunk_tokenizer or s.embed_model),
         embedder=embedder,
         store=QdrantStore.from_url(s.qdrant_url, s.collection),
         show_progress=True,
@@ -83,13 +83,31 @@ def build_pipeline(s: Settings, embedder: "Embedder | None" = None) -> "RAGPipel
     from medrag.index.embedder import SentenceTransformerEmbedder
     from medrag.index.store import QdrantStore
     from medrag.rag import RAGPipeline
+    from medrag.retrieval import RetrievalOptions
 
     store = QdrantStore.from_url(s.qdrant_url, s.collection)
     if not store.exists():
         typer.echo(f"Collection '{s.collection}' not found in Qdrant. Run `medrag ingest` first.", err=True)
         raise typer.Exit(code=1)
+    if s.retrieval_mode != "dense" and not store.has_sparse:
+        typer.echo(
+            f"retrieval_mode={s.retrieval_mode} needs BM25 vectors, which '{s.collection}' lacks. "
+            "Re-ingest it, or set MEDRAG_RETRIEVAL_MODE=dense.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+    reranker = None
+    if s.rerank_model:
+        from medrag.index.reranker import CrossEncoderReranker
+
+        reranker = CrossEncoderReranker(s)
     return RAGPipeline(
-        embedder or SentenceTransformerEmbedder(s), store, OllamaClient(s), s.top_k, s.parent_chunk_size > 0
+        embedder or SentenceTransformerEmbedder(s),
+        store,
+        OllamaClient(s),
+        s.top_k,
+        RetrievalOptions.from_settings(s),
+        reranker,
     )
 
 

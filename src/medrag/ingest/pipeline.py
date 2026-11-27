@@ -9,6 +9,7 @@ from pathlib import Path
 
 from medrag.config import Settings
 from medrag.index.embedder import Embedder
+from medrag.index.sparse import BM25Encoder
 from medrag.index.store import Chunk, QdrantStore
 from medrag.ingest.chunker import OffsetsFn, chunk_spans, token_offsets
 from medrag.ingest.clean import clean_text, parse_book
@@ -139,11 +140,12 @@ def ingest(
 
     texts = [c.embed_text(settings.contextual_headers) for c in chunks]
     vectors = embedder.embed_documents(texts, show_progress=show_progress)
+    sparse = BM25Encoder().fit(texts).encode_documents(texts) if settings.index_sparse else None
     t2 = time.perf_counter()
 
     # Rebuilds the collection from scratch; incremental re-indexing comes in Phase 8.
-    store.recreate(embedder.dim)
-    store.upsert(chunks, vectors)
+    store.recreate(embedder.dim, sparse=settings.index_sparse)
+    store.upsert(chunks, vectors, sparse)
     t3 = time.perf_counter()
 
     return IngestStats(

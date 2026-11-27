@@ -67,3 +67,12 @@ def test_grounding_aggregates() -> None:
     )
     assert g.faithfulness == pytest.approx(2 / 3)
     assert g.citation_counts() == (3, 3, 2, 1)
+
+
+def test_mcnemar_exact() -> None:
+    from medrag.eval.common import mcnemar_p
+
+    assert mcnemar_p(0, 0) == 1.0
+    assert mcnemar_p(5, 5) == 1.0
+    assert abs(mcnemar_p(10, 0) - 2 / 2**10) < 1e-12
+    assert mcnemar_p(67, 21) < 0.0001  # Phase 3 parent-child vs baseline

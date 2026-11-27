@@ -171,6 +171,35 @@ def compare_cmd(last: Annotated[int, typer.Option(help="How many recent runs to 
         typer.echo("  ".join(c.ljust(w) for c, w in zip(r, widths, strict=True)))
 
 
+@eval_app.command("paired")
+def paired_cmd(
+    run_a: Annotated[str, typer.Argument(help="Baseline run (directory or name prefix).")],
+    run_b: Annotated[str, typer.Argument(help="Candidate run (directory or name prefix).")],
+    metric: Annotated[
+        list[str] | None, typer.Option("--metric", "-m", help="Repeatable. Default: hit@1/3/5/10, medqa.")
+    ] = None,
+) -> None:
+    """Is B really better than A? Exact McNemar test on the items both runs scored."""
+    from medrag.eval.runner import PAIRED_METRICS, paired, resolve_run
+
+    try:
+        a, b = resolve_run(run_a), resolve_run(run_b)
+    except ValueError as e:
+        raise typer.BadParameter(str(e)) from e
+    typer.echo(f"A = {a.name}\nB = {b.name}")
+    for m in metric or list(PAIRED_METRICS):
+        if m not in PAIRED_METRICS:
+            raise typer.BadParameter(f"Unknown metric '{m}'. Choose from {', '.join(PAIRED_METRICS)}.")
+        try:
+            r = paired(a, b, m)
+        except (FileNotFoundError, ValueError):
+            continue  # suite not in both runs
+        typer.echo(
+            f"  {m:<18} n={r.n:<4} A {r.rate_a:.3f}  B {r.rate_b:.3f}  "
+            f"gained {r.gained:>3} / lost {r.lost:>3}  p={r.p_value:.4f}"
+        )
+
+
 def _labels_path() -> Path:
     return get_settings().data_dir / "eval" / "nli_labels.jsonl"
 

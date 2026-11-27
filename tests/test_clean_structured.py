@@ -21,6 +21,7 @@ from medrag.ingest.loader import load_books
 from medrag.ingest.pipeline import chunk_book, ingest
 from medrag.ingest.structured import make_units, pack
 from medrag.rag import RAGPipeline
+from medrag.retrieval import RetrievalOptions
 
 PARA = "The deltoid muscle is supplied by the axillary nerve. " * 12  # ~ a real paragraph (>150 chars)
 
@@ -118,7 +119,7 @@ def test_parent_child_ingest_and_retrieval(tmp_path: Path) -> None:
     store = QdrantStore(QdrantClient(":memory:"), "pc")
     emb = KeywordEmbedder()
     ingest(load_books(corpus), settings=s, offsets_fn=whitespace_offsets, embedder=emb, store=store)
-    rag = RAGPipeline(emb, store, EchoLLM(), top_k=2, parent_mode=True)
+    rag = RAGPipeline(emb, store, EchoLLM(), top_k=2, options=RetrievalOptions(parent_mode=True))
     hits = rag.retrieve("absence seizure ethosuximide")
     assert len({h.chunk.chunk_id for h in hits}) == len(hits)  # parents deduplicated
     assert hits[0].chunk.book == "Pharmacology_Katzung"

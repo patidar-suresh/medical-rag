@@ -1,0 +1,131 @@
+# Curated medical abbreviations used for query expansion: ABBREVIATION<TAB>expansion.
+# Only abbreviations with one dominant clinical meaning are listed. Ambiguous ones
+# (MS, PE, CA, PID, RA, PT; IV is also a Roman numeral) are left out on purpose:
+# a wrong expansion hurts more than none.
+# Matching is case-sensitive and on whole words.
+AAA	abdominal aortic aneurysm
+ACE	angiotensin-converting enzyme
+ACEI	angiotensin-converting enzyme inhibitor
+ACTH	adrenocorticotropic hormone
+ADH	antidiuretic hormone
+ADHD	attention-deficit/hyperactivity disorder
+AF	atrial fibrillation
+AFib	atrial fibrillation
+AIDS	acquired immunodeficiency syndrome
+AKI	acute kidney injury
+ALL	acute lymphoblastic leukemia
+ALS	amyotrophic lateral sclerosis
+ALT	alanine aminotransferase
+AML	acute myeloid leukemia
+ANA	antinuclear antibody
+ARB	angiotensin receptor blocker
+ARDS	acute respiratory distress syndrome
+ASD	atrial septal defect
+AST	aspartate aminotransferase
+ATN	acute tubular necrosis
+AV	atrioventricular
+BMI	body mass index
+BNP	brain natriuretic peptide
+BPH	benign prostatic hyperplasia
+BUN	blood urea nitrogen
+CABG	coronary artery bypass graft
+CAD	coronary artery disease
+CBC	complete blood count
+CHF	congestive heart failure
+CKD	chronic kidney disease
+CLL	chronic lymphocytic leukemia
+CML	chronic myeloid leukemia
+CMV	cytomegalovirus
+CNS	central nervous system
+COPD	chronic obstructive pulmonary disease
+CPR	cardiopulmonary resuscitation
+CRP	C-reactive protein
+CSF	cerebrospinal fluid
+CT	computed tomography
+CVA	cerebrovascular accident
+DIC	disseminated intravascular coagulation
+DKA	diabetic ketoacidosis
+DM	diabetes mellitus
+DVT	deep vein thrombosis
+EBV	Epstein-Barr virus
+ECG	electrocardiogram
+EKG	electrocardiogram
+EEG	electroencephalogram
+EGD	esophagogastroduodenoscopy
+ERCP	endoscopic retrograde cholangiopancreatography
+ESR	erythrocyte sedimentation rate
+ESRD	end-stage renal disease
+FSH	follicle-stimulating hormone
+GBS	Guillain-Barré syndrome
+GERD	gastroesophageal reflux disease
+GFR	glomerular filtration rate
+GI	gastrointestinal
+GnRH	gonadotropin-releasing hormone
+G6PD	glucose-6-phosphate dehydrogenase
+HbA1c	glycated hemoglobin
+hCG	human chorionic gonadotropin
+HBV	hepatitis B virus
+HCV	hepatitis C virus
+HDL	high-density lipoprotein
+HIV	human immunodeficiency virus
+HLA	human leukocyte antigen
+HPV	human papillomavirus
+HSV	herpes simplex virus
+HTN	hypertension
+IBD	inflammatory bowel disease
+IBS	irritable bowel syndrome
+ICP	intracranial pressure
+ICU	intensive care unit
+IgA	immunoglobulin A
+IgE	immunoglobulin E
+IgG	immunoglobulin G
+IgM	immunoglobulin M
+INR	international normalized ratio
+ITP	immune thrombocytopenic purpura
+IUD	intrauterine device
+IVC	inferior vena cava
+JVP	jugular venous pressure
+LDH	lactate dehydrogenase
+LDL	low-density lipoprotein
+LH	luteinizing hormone
+LP	lumbar puncture
+LV	left ventricle
+LVH	left ventricular hypertrophy
+MAOI	monoamine oxidase inhibitor
+MCV	mean corpuscular volume
+MI	myocardial infarction
+MRI	magnetic resonance imaging
+MRSA	methicillin-resistant Staphylococcus aureus
+NSAID	nonsteroidal anti-inflammatory drug
+NSAIDs	nonsteroidal anti-inflammatory drugs
+OCD	obsessive-compulsive disorder
+PCOS	polycystic ovary syndrome
+PCR	polymerase chain reaction
+PDA	patent ductus arteriosus
+PPI	proton pump inhibitor
+PSA	prostate-specific antigen
+PTH	parathyroid hormone
+PTSD	posttraumatic stress disorder
+PTT	partial thromboplastin time
+RBC	red blood cell
+RSV	respiratory syncytial virus
+SA	sinoatrial
+SIADH	syndrome of inappropriate antidiuretic hormone secretion
+SLE	systemic lupus erythematosus
+SSRI	selective serotonin reuptake inhibitor
+SSRIs	selective serotonin reuptake inhibitors
+STD	sexually transmitted disease
+STI	sexually transmitted infection
+SVC	superior vena cava
+TB	tuberculosis
+TCA	tricyclic antidepressant
+TIA	transient ischemic attack
+TNF	tumor necrosis factor
+TPN	total parenteral nutrition
+TSH	thyroid-stimulating hormone
+TTP	thrombotic thrombocytopenic purpura
+UTI	urinary tract infection
+VSD	ventricular septal defect
+VTE	venous thromboembolism
+VZV	varicella-zoster virus
+WBC	white blood cell

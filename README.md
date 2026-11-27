@@ -46,6 +46,7 @@ uv run medrag eval run                      # all suites -> eval/runs/<timestamp
 uv run medrag eval run -s smoke             # quick check (26 hand-written questions)
 uv run medrag eval run -s medqa -m llama3.2:3b -m qwen3:4b   # compare local models
 uv run medrag eval compare                  # key metrics of recent runs side by side
+uv run medrag eval paired <run A> <run B>   # is B really better? exact McNemar test per metric
 
 # Calibrate the automatic faithfulness check against your own judgement
 uv run medrag eval label --n 50             # y/n per answer sentence (resumable)

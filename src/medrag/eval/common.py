@@ -98,5 +98,18 @@ def wilson_interval(successes: int, n: int, z: float = 1.96) -> tuple[float, flo
     return (max(0.0, centre - half), min(1.0, centre + half))
 
 
+def mcnemar_p(gained: int, lost: int) -> float:
+    """Exact two-sided McNemar test on paired binary outcomes.
+
+    Only discordant items count: `gained` (B right, A wrong) and `lost` (A right, B wrong).
+    Under "no difference" each discordant item is a fair coin flip.
+    """
+    n = gained + lost
+    if n == 0:
+        return 1.0
+    tail = sum(math.comb(n, i) for i in range(min(gained, lost) + 1)) / float(2**n)
+    return float(min(1.0, 2 * tail))
+
+
 def latency_summary(prefix: str, seconds: Sequence[float]) -> dict[str, float | None]:
     return {f"{prefix}_p50_s": percentile(seconds, 50), f"{prefix}_p95_s": percentile(seconds, 95)}

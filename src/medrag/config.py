@@ -36,8 +36,17 @@ class Settings(BaseSettings):
     embed_model: str = "BAAI/bge-small-en-v1.5"
     embed_device: str = "cuda"  # falls back to CPU when CUDA is unavailable
     embed_batch_size: int = Field(default=64, ge=1)
-    # bge-*-v1.5 models expect this instruction on queries (not on passages).
+    # bge-*-v1.5 models expect this instruction on queries (not on passages). Set it to ""
+    # for models without one (bge-m3, MedCPT).
     embed_query_prefix: str = "Represent this sentence for searching relevant passages: "
+    # Asymmetric models (MedCPT) encode queries with a separate model; "" = same as embed_model.
+    embed_query_model: str = ""
+    # "auto" = the model's own sentence-transformers config; "cls"/"mean" for plain HF encoders.
+    embed_pooling: Literal["auto", "cls", "mean"] = "auto"
+    embed_max_length: int = Field(default=512, ge=16, le=8192)
+    # Tokenizer that measures chunk sizes; "" = embed_model's. Pin it to compare embedding
+    # models on identical chunks.
+    chunk_tokenizer: str = ""
 
     # Chunking. Defaults = Phase 3 winner (docs/experiments/phase3-chunking.md):
     # structured parent-child, 160-token children embedded, 800-token parents returned.
@@ -68,8 +77,23 @@ class Settings(BaseSettings):
         """Plain copy of the indexed chunks, one file per collection."""
         return self.data_dir / "chunks" / f"{self.collection}.jsonl"
 
-    # Retrieval
+    # Keyword index: store a BM25 sparse vector per chunk next to the dense one (cheap; needed
+    # for retrieval_mode sparse/hybrid).
+    index_sparse: bool = True
+
+    # Retrieval (Phase 4, docs/experiments/phase4-retrieval.md)
     top_k: int = Field(default=5, ge=1, le=50)
+    # Defaults = Phase 4 winner: hybrid first stage, MiniLM cross-encoder rerank of 50 candidates.
+    retrieval_mode: Literal["dense", "sparse", "hybrid"] = "hybrid"  # hybrid = dense + BM25 via RRF
+    retrieval_candidates: int = Field(default=50, ge=1, le=500)  # per list, before fusion/rerank
+    rrf_k: int = Field(default=60, ge=1)
+    # Cross-encoder reranker over the candidates; "" disables reranking. On a GPU with 8 GB+,
+    # BAAI/bge-reranker-v2-m3 is more accurate (needs ~2.6 GB; too big next to the LLM on 4 GB).
+    rerank_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    rerank_max_length: int = Field(default=512, ge=32, le=8192)
+    rerank_batch_size: int = Field(default=32, ge=1)
+    max_per_book: int = Field(default=0, ge=0)  # diversity cap in the top k; 0 = off
+    expand_abbreviations: bool = False  # "MI" -> "MI (myocardial infarction)" before searching
 
     # Evaluation: open NLI model used to check answer sentences against passages
     nli_model: str = "cross-encoder/nli-deberta-v3-base"
